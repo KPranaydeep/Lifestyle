@@ -92,7 +92,8 @@ if time_passed.total_seconds() > 0:
             if shutdown_at <= end:
                 st.error(f"🛑 To stay under threshold, **stop screen use by:** {shutdown_at.strftime('%I:%M %p')}")
         else:
-            st.balloons()
+            # st.balloons()
+            st.toast("🎯 Screen time goal saved! Good discipline.")
             st.success("🎉 This pause is enough to stay within your screen time goal!")
 
 else:
