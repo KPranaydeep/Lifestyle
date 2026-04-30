@@ -1,6 +1,6 @@
+import pytz
 import streamlit as st
 from datetime import datetime, timedelta
-import pytz
 
 # === Streamlit Page Config ===
 st.set_page_config(page_title="📱 Screen Time Tracker", layout="centered")
