@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Trust Hint (Local)",
+  "version": "0.1",
+  "description": "Local-only trust hints for YouTube based only on visible page content.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "YT Trust Hint"
+  }
+}
