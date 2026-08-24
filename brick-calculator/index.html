@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brickwork Estimator</title>
+  <style>
+    :root { --ink: #15251d; --muted: #68756d; --paper: #f4f1e7; --panel: #fffdf7; --line: #d9d5c8; --green: #1d6a4b; --lime: #c8dc62; --clay: #c66e46; --shadow: 0 14px 40px rgba(35, 50, 39, .09); }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 16px/1.4 Georgia, 'Times New Roman', serif; }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 34px 24px 48px; }
+    header { display: flex; justify-content: space-between; align-items: end; gap: 20px; border-bottom: 2px solid var(--ink); padding-bottom: 22px; }
+    .eyebrow { margin: 0 0 7px; color: var(--green); font: 700 11px/1.1 Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(31px, 5vw, 54px); font-weight: 500; line-height: .98; letter-spacing: 0; }
+    .stamp { border: 1px solid var(--green); color: var(--green); padding: 8px 10px; font: 700 10px/1 Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+    .workspace { display: grid; grid-template-columns: minmax(280px, 410px) minmax(0, 1fr); gap: 28px; margin-top: 28px; }
+    .inputs, .result { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .inputs { padding: 22px; }
+    h2 { margin: 0; font-size: 20px; font-weight: 500; }
+    .section { padding: 19px 0; border-bottom: 1px solid var(--line); }
+    .section:last-child { border: 0; padding-bottom: 0; }
+    .section-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 13px; }
+    .section-title small { color: var(--muted); font: 12px Arial, sans-serif; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    label { display: block; color: var(--muted); font: 12px Arial, sans-serif; }
+    input[type=number] { width: 100%; margin-top: 5px; padding: 9px; color: var(--ink); border: 1px solid #bfc6ba; border-radius: 2px; background: #fff; font: 17px Georgia, serif; }
+    input:focus { outline: 2px solid var(--lime); border-color: var(--green); }
+    .stepper { display: grid; grid-template-columns: 36px 1fr 36px; margin-top: 5px; border: 1px solid #bfc6ba; background: #fff; }
+    .stepper input { margin: 0; border: 0; text-align: center; padding: 8px 2px; min-width: 0; }
+    button { cursor: pointer; }
+    .stepper button { color: var(--green); border: 0; background: #eef2e9; font: 22px/1 Arial, sans-serif; }
+    .stepper button:hover { background: var(--lime); }
+    .hint { margin: 12px 0 0; color: var(--muted); font: 12px/1.4 Arial, sans-serif; }
+    .result { overflow: hidden; }
+    .result-heading { display: flex; justify-content: space-between; align-items: center; padding: 22px 24px 16px; }
+    .result-label { color: var(--muted); font: 700 10px Arial, sans-serif; letter-spacing: 1.4px; text-transform: uppercase; }
+    .total { padding: 0 24px 20px; }
+    .total strong { display: block; color: var(--green); font-size: clamp(54px, 9vw, 92px); font-weight: 500; line-height: .85; }
+    .total span { color: var(--muted); font: 14px Arial, sans-serif; }
+    .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .metric { padding: 14px 16px; border-right: 1px solid var(--line); }
+    .metric:last-child { border: 0; }
+    .metric b { display: block; font: 22px Georgia, serif; font-weight: 500; }
+    .metric small { color: var(--muted); font: 10px Arial, sans-serif; text-transform: uppercase; letter-spacing: .8px; }
+    .diagram-wrap { padding: 22px 24px 15px; }
+    .diagram-key { display: flex; gap: 17px; color: var(--muted); font: 11px Arial, sans-serif; margin-bottom: 13px; }
+    .key { display: flex; gap: 5px; align-items: center; }
+    .dot { width: 11px; height: 11px; background: var(--clay); display: inline-block; }
+    .dot.opening { background: #d9e1d9; border: 1px solid #a9b4a9; }
+    .wall-frame { overflow-x: auto; padding-bottom: 4px; }
+    .wall-stage { position: relative; width: 100%; overflow: hidden; border: 1px solid #9d9789; background-color: #c66e46; background-image: linear-gradient(#a95033 1px, transparent 1px), linear-gradient(90deg, #a95033 1px, transparent 1px); }
+    .wall-stage .opening { position: absolute; bottom: 0; z-index: 1; display: flex; align-items: center; justify-content: center; background: #e6ebe2; border: 4px solid #f4f1e7; color: #536056; font: 700 10px Arial, sans-serif; letter-spacing: .8px; text-transform: uppercase; }
+    .wall-stage .opening.window { border-width: 4px; }
+    .wall-stage .opening.window::before, .wall-stage .opening.window::after { content: ''; position: absolute; background: #aab6a9; }
+    .wall-stage .opening.window::before { width: 1px; height: 100%; }
+    .wall-stage .opening.window::after { height: 1px; width: 100%; }
+    .wall-stage .opening.door { background: #2e3e34; color: #ecf0e6; }
+    .dim { position: absolute; z-index: 2; color: #fffdf7; text-shadow: 0 1px 2px #3e2319; font: 700 11px Arial, sans-serif; letter-spacing: .5px; }
+    .dim.top { top: 8px; left: 50%; transform: translateX(-50%); }
+    .dim.side { top: 50%; left: 8px; transform: rotate(-90deg) translateX(-50%); transform-origin: left top; }
+    .legend-note { margin: 12px 0 0; color: var(--muted); font: 12px Arial, sans-serif; }
+    .breakdown { padding: 7px 24px 22px; }
+    .breakdown h3 { margin: 12px 0 8px; font: 700 11px Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    .line { display: flex; justify-content: space-between; gap: 15px; padding: 8px 0; border-top: 1px solid #ebe7dc; font-size: 15px; }
+    .line b { font-weight: 500; }
+    .line.final { color: var(--green); font-size: 17px; }
+    @media (max-width: 1000px) { .wall-stage .opening { border-width: 2px; font-size: 0; } .wall-stage .opening.window { border-width: 2px; } }
+    @media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } .shell { padding: 22px 14px 34px; } header { align-items: start; flex-direction: column; } }
+    @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } .metric { padding: 12px 8px; } .metric b { font-size: 18px; } .diagram-wrap { padding: 18px 14px 12px; } .wall-frame { overflow: visible; } .dim { font-size: 9px; } .dim.top { top: 3px; } .dim.side { left: 3px; } .legend-note { font-size: 11px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><p class="eyebrow">Material planning tool</p><h1>Brickwork Estimator</h1></div>
+      <div class="stamp">Imperial calculator</div>
+    </header>
+    <section class="workspace">
+      <form class="inputs" id="calculator">
+        <div class="section"><div class="section-title"><h2>Wall dimensions</h2><small>feet</small></div><div class="field-grid">
+          <label>Perimeter<input id="perimeter" type="number" min="0.01" step="0.01" value="48.5833"></label>
+          <label>Wall height<input id="wallHeight" type="number" min="0.1" step="0.1" value="8.9"></label>
+        </div></div>
+        <div class="section"><div class="section-title"><h2>Brick size</h2><small>inches</small></div><div class="field-grid">
+          <label>Length<input id="brickLength" type="number" min="0.1" step="0.1" value="9"></label>
+          <label>Height<input id="brickHeight" type="number" min="0.1" step="0.1" value="3"></label>
+        </div><p class="hint">Includes a 0.4 in mortar joint in each direction.</p></div>
+        <div class="section"><div class="section-title"><h2>Doors</h2><small>quantity + size</small></div><div class="field-grid">
+          <label>Number<div class="stepper"><button type="button" data-step="doors" data-change="-1" aria-label="Remove door">-</button><input id="doors" type="number" min="0" step="1" value="3"><button type="button" data-step="doors" data-change="1" aria-label="Add door">+</button></div></label>
+          <label>Width<input id="doorWidth" type="number" min="0" step="0.1" value="3"></label>
+          <label>Height<input id="doorHeight" type="number" min="0" step="0.1" value="7"></label>
+        </div></div>
+        <div class="section"><div class="section-title"><h2>Windows</h2><small>quantity + size</small></div><div class="field-grid">
+          <label>Number<div class="stepper"><button type="button" data-step="windows" data-change="-1" aria-label="Remove window">-</button><input id="windows" type="number" min="0" step="1" value="4"><button type="button" data-step="windows" data-change="1" aria-label="Add window">+</button></div></label>
+          <label>Width<input id="windowWidth" type="number" min="0" step="0.1" value="4"></label>
+          <label>Height<input id="windowHeight" type="number" min="0" step="0.1" value="4"></label>
+        </div></div>
+      </form>
+      <section class="result" aria-live="polite">
+        <div class="result-heading"><h2>Estimate</h2><span class="result-label">Live calculation</span></div>
+        <div class="total"><strong id="brickTotal">0</strong><span>bricks to purchase; use local bricks for any shortfall</span></div>
+        <div class="metric-row"><div class="metric"><b id="netArea">0 ft²</b><small>Net wall area</small></div><div class="metric"><b id="bricksSqm">0</b><small>Bricks / ft²</small></div><div class="metric"><b id="openingsArea">0 ft²</b><small>Opening area</small></div></div>
+        <div class="diagram-wrap"><div class="diagram-key"><span class="key"><i class="dot"></i> Brickwork</span><span class="key"><i class="dot opening"></i> Openings removed</span></div><div class="wall-frame"><div class="wall-stage" id="wallDiagram"><span class="dim top" id="widthLabel"></span><span class="dim side" id="heightLabel"></span></div></div><p class="legend-note">Scaled elevation: wall, brick, door, and window sizes match the entered dimensions. Openings are evenly distributed because their locations are not entered.</p></div>
+        <div class="breakdown"><h3>Calculation trail</h3><div class="line"><span>Gross wall area</span><b id="grossLine">0 ft²</b></div><div class="line"><span>Doors and windows</span><b id="openingsLine">- 0 ft²</b></div><div class="line"><span>Whole bricks for net wall area</span><b id="baseLine">0</b></div><div class="line final"><span>Purchase quantity</span><b id="finalLine">0 bricks</b></div></div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const form = document.getElementById('calculator');
+    const value = (id) => Math.max(0, Number(document.getElementById(id).value) || 0);
+    const display = (number, decimals = 1) => Number(number).toLocaleString('en-US', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+    function opening(type, left, width, height, bottom) {
+      const item = document.createElement('div'); item.className = `opening ${type}`; item.textContent = type;
+      item.style.left = `${left}%`; item.style.width = `${width}%`; item.style.height = `${height}%`; item.style.bottom = `${bottom}%`;
+      return item;
+    }
+    function calculate() {
+      const perimeter = value('perimeter'), wallHeight = value('wallHeight'), brickLength = value('brickLength'), brickHeight = value('brickHeight');
+      const doors = Math.floor(value('doors')), windows = Math.floor(value('windows'));
+      const doorArea = doors * value('doorWidth') * value('doorHeight'); const windowArea = windows * value('windowWidth') * value('windowHeight');
+      const gross = perimeter * wallHeight, openings = doorArea + windowArea, net = Math.max(0, gross - openings);
+      const brickFace = ((brickLength + 0.4) / 12) * ((brickHeight + 0.4) / 12); const density = brickFace ? 1 / brickFace : 0;
+      const total = Math.floor(net * density);
+      document.getElementById('brickTotal').textContent = total.toLocaleString('en-US'); document.getElementById('netArea').textContent = `${display(net)} ft²`;
+      document.getElementById('bricksSqm').textContent = density ? display(density, 1) : '0'; document.getElementById('openingsArea').textContent = `${display(openings)} ft²`;
+      document.getElementById('grossLine').textContent = `${display(gross)} ft²`; document.getElementById('openingsLine').textContent = `- ${display(openings)} ft²`;
+      document.getElementById('baseLine').textContent = total.toLocaleString('en-US'); document.getElementById('finalLine').textContent = `${total.toLocaleString('en-US')} bricks`;
+      document.getElementById('widthLabel').textContent = `${display(perimeter)} ft perimeter`; document.getElementById('heightLabel').textContent = `${display(wallHeight)} ft high`;
+      const wall = document.getElementById('wallDiagram'); wall.querySelectorAll('.opening').forEach((node) => node.remove());
+      wall.style.aspectRatio = `${perimeter} / ${wallHeight}`;
+      wall.style.backgroundSize = `${((brickLength + 0.4) / 12 / perimeter) * 100}% ${((brickHeight + 0.4) / 12 / wallHeight) * 100}%`;
+      const diagramOpenings = [
+        ...Array.from({ length: doors }, () => ({ type: 'door', width: value('doorWidth'), height: value('doorHeight') })),
+        ...Array.from({ length: windows }, () => ({ type: 'window', width: value('windowWidth'), height: value('windowHeight') }))
+      ];
+      const combinedWidth = diagramOpenings.reduce((sum, item) => sum + item.width, 0);
+      const gap = Math.max(0, (perimeter - combinedWidth) / (diagramOpenings.length + 1)); let position = gap;
+      diagramOpenings.forEach((item) => {
+        const bottom = item.type === 'door' ? 0 : Math.max(0, (wallHeight - item.height) / 2);
+        wall.append(opening(item.type, position / perimeter * 100, item.width / perimeter * 100, item.height / wallHeight * 100, bottom / wallHeight * 100));
+        position += item.width + gap;
+      });
+    }
+    form.addEventListener('input', calculate); form.addEventListener('change', calculate);
+    document.querySelectorAll('[data-step]').forEach((button) => button.addEventListener('click', () => { const input = document.getElementById(button.dataset.step); input.value = Math.max(0, value(button.dataset.step) + Number(button.dataset.change)); calculate(); }));
+    calculate();
+  </script>
+</body>
+</html>
